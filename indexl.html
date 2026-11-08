@@ -1,1335 +1,1001 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>罗氏题库在线测评系统</title>
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Font Awesome 图标库 -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- QRCode.js 用于二维码生成 -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <!-- SheetJS 用于 Excel 高容错解析 -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>罗氏考核与复习测评系统</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <style>
+    :root {
+      --primary: #0066cc;
+      --primary-dark: #004c99;
+      --primary-light: #e6f0fa;
+      --success: #07c160;
+      --success-light: #e8f8ef;
+      --danger: #fa5151;
+      --danger-light: #feecec;
+      --warning: #ff9900;
+      --text-main: #1f2d3d;
+      --text-sub: #5c6b77;
+      --text-muted: #8c9ba5;
+      --bg-page: #f4f7f9;
+      --card-bg: #ffffff;
+      --border-color: #e2e8f0;
+      --shadow-sm: 0 2px 8px rgba(0, 102, 204, 0.06);
+      --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08);
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body {
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background-color: #0b192c;
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
-    .custom-scrollbar::-webkit-scrollbar {
-      width: 4px;
-      height: 4px;
+
+    .system-container {
+      width: 100%;
+      max-width: 1280px;
+      height: 94vh;
+      display: flex;
+      gap: 24px;
+      padding: 16px;
     }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 4px;
+
+    .desktop-panel {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      color: #fff;
     }
-    .phone-container {
-      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25), 0 0 0 10px #0f172a;
+    .panel-brand h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; color: #fff; }
+    .panel-brand p { font-size: 14px; color: #94a3b8; }
+
+    .qr-card {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      text-align: center;
     }
-    .page-slide-enter {
-      animation: slideIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    .qr-box {
+      width: 170px;
+      height: 170px;
+      background: #fff;
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      margin: 0 auto 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+    .qr-card h3 { font-size: 15px; margin-bottom: 6px; }
+    .qr-card p { font-size: 12px; color: #94a3b8; margin-bottom: 12px; }
+    .btn-group { display: flex; gap: 8px; justify-content: center; }
+    .btn-outline {
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: transparent;
+      color: #fff;
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      cursor: pointer;
     }
-    .shake-anim {
-      animation: shake 0.35s ease-in-out;
+    .btn-outline:hover { background: rgba(255, 255, 255, 0.15); }
+
+    .phone-simulator {
+      width: 430px;
+      max-width: 100%;
+      height: 100%;
+      background: var(--bg-page);
+      border-radius: 40px;
+      border: 10px solid #1e293b;
+      box-shadow: var(--shadow-md), 0 0 0 2px rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
     }
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      20%, 60% { transform: translateX(-6px); }
-      40%, 80% { transform: translateX(6px); }
+
+    .wx-capsule-bar {
+      height: 48px;
+      background: var(--card-bg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--border-color);
+      z-index: 10;
+    }
+    .app-title-mini { font-size: 15px; font-weight: 600; color: var(--text-main); }
+    .wx-capsule {
+      display: flex;
+      align-items: center;
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      border-radius: 16px;
+      padding: 4px 10px;
+      background: rgba(255, 255, 255, 0.85);
+      gap: 8px;
+    }
+    .capsule-btn { font-size: 12px; cursor: pointer; color: #333; }
+
+    .role-switch-container {
+      background: #fff;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .role-pill-group {
+      display: flex;
+      background: var(--bg-page);
+      border-radius: 20px;
+      padding: 3px;
+      width: 100%;
+    }
+    .role-pill {
+      flex: 1;
+      text-align: center;
+      padding: 7px 0;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-sub);
+      border-radius: 18px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .role-pill.active {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(0, 102, 204, 0.25);
+    }
+
+    .screen-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      position: relative;
+    }
+
+    .mode-select-card {
+      background: #fff;
+      border-radius: var(--radius-md);
+      padding: 18px;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-color);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: transform 0.15s ease;
+    }
+    .mode-select-card:active { transform: scale(0.98); }
+    .mode-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-right: 14px;
+    }
+    .mode-info h4 { font-size: 16px; margin-bottom: 4px; color: var(--text-main); }
+    .mode-info p { font-size: 12px; color: var(--text-muted); }
+
+    .quiz-card {
+      background: #fff;
+      border-radius: var(--radius-md);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-color);
+      margin-bottom: 16px;
+    }
+    .question-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .badge-tag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+    .badge-single { background: #e0f2fe; color: #0284c7; }
+    .badge-multi { background: #fef3c7; color: #d97706; }
+    .badge-judge { background: #f3e8ff; color: #9333ea; }
+    .badge-fill { background: #fce7f3; color: #db2777; }
+    .q-index-text { font-size: 13px; color: var(--text-muted); font-weight: 600; }
+
+    .question-title {
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 1.5;
+      color: var(--text-main);
+      margin-bottom: 18px;
+    }
+
+    .option-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+    .option-item {
+      display: flex;
+      align-items: flex-start;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+      background: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1.45;
+      transition: all 0.15s ease;
+    }
+    .option-item:hover { border-color: var(--primary); }
+    .option-item.selected {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary);
+      font-weight: 500;
+    }
+    .option-item.correct {
+      background: var(--success-light) !important;
+      border-color: var(--success) !important;
+      color: #0d6832 !important;
+      font-weight: 600;
+    }
+    .option-item.wrong {
+      background: var(--danger-light) !important;
+      border-color: var(--danger) !important;
+      color: #991b1b !important;
+    }
+    .option-code {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1px solid currentColor;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      margin-right: 10px;
+      flex-shrink: 0;
+    }
+
+    .fill-box {
+      margin-bottom: 16px;
+      padding: 14px;
+      background: #f8fafc;
+      border-radius: var(--radius-sm);
+      border: 1px dashed var(--border-color);
+    }
+    .fill-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .explain-card {
+      background: #f8fafc;
+      border-left: 4px solid var(--primary);
+      padding: 14px;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      margin-top: 14px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .explain-card.correct-border { border-left-color: var(--success); }
+    .explain-card.wrong-border { border-left-color: var(--danger); }
+    .explain-title { font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+
+    .bottom-bar {
+      padding: 12px 16px;
+      background: #fff;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      gap: 10px;
+    }
+    .btn-main {
+      flex: 1;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 22px;
+      padding: 11px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+    }
+    .btn-main:active { opacity: 0.9; }
+    .btn-secondary {
+      background: #f1f5f9;
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-radius: 22px;
+      padding: 11px 18px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 900px) {
+      body { background: var(--bg-page); }
+      .system-container { padding: 0; height: 100vh; }
+      .desktop-panel { display: none; }
+      .phone-simulator {
+        width: 100%;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+      }
     }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col md:flex-row justify-center items-stretch md:items-center p-0 md:p-6 lg:p-8">
+<body>
 
-  <!-- 桌面端控制面板与二维码生成器（移动端微信扫码进入时自动隐去） -->
-  <aside id="desktopPanel" class="w-full md:w-96 lg:w-[420px] bg-white rounded-3xl shadow-xl border border-slate-200/80 p-6 flex flex-col justify-between mb-6 md:mb-0 md:mr-8 transition-all shrink-0">
+<div class="system-container">
+  <!-- 桌面辅助面板 -->
+  <div class="desktop-panel">
     <div>
-      <!-- 系统头部信息 -->
-      <div class="flex items-center space-x-3 mb-5 border-b border-slate-100 pb-4">
-        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-700 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
-          <i class="fa-solid fa-square-poll-vertical text-2xl"></i>
-        </div>
-        <div>
-          <h1 class="font-bold text-slate-900 text-lg flex items-center">
-            罗氏题库系统
-            <span id="bankSourceTag" class="ml-2 bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full font-bold">已固化内置</span>
-          </h1>
-          <p class="text-xs text-slate-500">双板块架构 · 复习背题 (直接看答案) + 测验实战 (提交显答案)</p>
-        </div>
+      <div class="panel-brand">
+        <h1>罗氏双轨题库测评系统</h1>
+        <p>已固化：渠道岗（120题）+ 生态岗题库</p>
       </div>
-
-      <!-- 题库统计数据卡片 -->
-      <div class="grid grid-cols-2 gap-3 mb-5">
-        <div class="bg-blue-50/70 border border-blue-100 rounded-2xl p-3 text-center">
-          <span class="block text-2xl font-black text-blue-700" id="sidebarQuestionCount">0</span>
-          <span class="text-xs text-blue-600 font-medium">当前试题总数</span>
-        </div>
-        <div class="bg-indigo-50/70 border border-indigo-100 rounded-2xl p-3 text-center">
-          <span class="block text-2xl font-black text-indigo-700">双板块</span>
-          <span class="text-xs text-indigo-600 font-medium">背题复习 + 考核测验</span>
-        </div>
-      </div>
-
-      <!-- 微信扫码答题二维码卡片 -->
-      <div class="bg-gradient-to-b from-slate-50 to-white rounded-2xl p-4 border border-slate-200 text-center relative overflow-hidden">
-        <div class="inline-flex items-center space-x-1.5 text-xs font-semibold text-slate-700 mb-2.5">
-          <i class="fa-brands fa-weixin text-emerald-600 text-sm"></i>
-          <span>微信扫一扫 · 手机即刻作答</span>
-        </div>
-
-        <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 inline-block mx-auto mb-2">
-          <div id="qrcode" class="flex justify-center items-center"></div>
-        </div>
-
-        <!-- 二维码跳转板块配置 -->
-        <div class="flex items-center justify-center space-x-4 mb-2 text-xs font-medium text-slate-600">
-          <label class="flex items-center space-x-1 cursor-pointer">
-            <input type="radio" name="qrModeOption" value="quiz" checked class="text-blue-600">
-            <span>扫码直达测验</span>
-          </label>
-          <label class="flex items-center space-x-1 cursor-pointer">
-            <input type="radio" name="qrModeOption" value="review" class="text-indigo-600">
-            <span>扫码直达复习</span>
-          </label>
-        </div>
-
-        <p class="text-[11px] text-slate-400 mb-3">支持在微信群中分享或打印张贴二维码</p>
-
-        <div class="flex items-center gap-2">
-          <button id="downloadQrBtn" class="flex-1 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-sm hover:shadow transition flex items-center justify-center space-x-1.5">
-            <i class="fa-solid fa-download"></i>
-            <span>保存二维码</span>
-          </button>
-          <button id="copyUrlBtn" class="flex-1 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition flex items-center justify-center space-x-1.5">
-            <i class="fa-regular fa-copy"></i>
-            <span>复制答题网址</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- 线上访问网址配置 -->
-      <div class="mt-4 pt-3 border-t border-slate-100">
-        <div class="flex items-center justify-between text-xs text-slate-500 mb-1.5">
-          <span class="font-medium">GitHub Pages 在线网址</span>
-          <span class="text-[10px] text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded font-mono">已绑定</span>
-        </div>
-        <div class="flex gap-2">
-          <input type="text" id="targetUrlInput" value="https://stefanie2027.github.io/exam/" class="flex-1 text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-slate-700 focus:outline-none focus:border-blue-500 font-mono">
-          <button id="updateUrlBtn" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-medium shrink-0">更新</button>
-        </div>
+      <div style="margin-top: 24px; font-size: 13px; color: #cbd5e1; line-height: 1.8;">
+        <p>• <b>渠道岗</b>：涵盖布局、供应、商业合规、商业运营、折扣与数据全套题目</p>
+        <p>• <b>生态岗</b>：涵盖战略、HR合规、准入考题及新业极核心考点</p>
+        <p>• <b>模式</b>：每题单页展示，提供「背题复习」与「实战测验」双模式</p>
       </div>
     </div>
 
-    <!-- 底部题库上传与一键固化代码导出 -->
-    <div class="mt-5 pt-4 border-t border-slate-100 space-y-2.5">
-      <!-- 重新选择本地表格 -->
-      <label class="w-full py-2.5 border-2 border-dashed border-blue-400 hover:border-blue-600 bg-blue-50/70 hover:bg-blue-50 rounded-2xl flex items-center justify-center space-x-2 cursor-pointer transition text-xs text-blue-700 font-bold shadow-sm">
-        <i class="fa-solid fa-cloud-arrow-up text-blue-600 text-base"></i>
-        <span>导入其他 Excel 题库表格</span>
-        <input type="file" id="excelFileInput" accept=".xlsx, .xls" class="hidden">
-      </label>
-
-      <!-- 一键固化导出 index.html -->
-      <button id="exportEmbeddedHtmlBtn" class="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl text-xs font-bold transition flex items-center justify-center space-x-2 shadow-md shadow-emerald-600/20">
-        <i class="fa-solid fa-file-code text-sm"></i>
-        <span>导出当前内置题库的 index.html</span>
-      </button>
-
-      <div class="flex items-center justify-between text-[11px] text-slate-400 px-1">
-        <span>数据支持离线本地存储</span>
-        <button id="resetToDefaultBtn" class="hover:text-rose-500 transition underline">恢复内置初始题库</button>
+    <div class="qr-card">
+      <div class="qr-box" id="qrcode"></div>
+      <h3 id="qr-label">微信扫码答题</h3>
+      <p id="qr-url-text">https://stefanie2027.github.io/rochetest-revise/</p>
+      <div class="btn-group">
+        <button class="btn-outline" onclick="copyShareUrl()">复制链接</button>
+        <button class="btn-outline" onclick="downloadQRCode()">保存二维码</button>
       </div>
     </div>
-  </aside>
-
-  <!-- 手机端界面模拟器容器（移动端扫码进入时自动全屏适配） -->
-  <main id="mobileViewport" class="phone-container w-full max-w-[430px] h-[100dvh] md:h-[844px] bg-slate-50 rounded-none md:rounded-[48px] overflow-hidden flex flex-col relative shrink-0">
-
-    <!-- 仿真微信小程序胶囊导航栏 -->
-    <header class="bg-white border-b border-slate-100 px-4 pt-4 pb-3 flex items-center justify-between shrink-0 select-none z-20">
-      <div class="flex items-center space-x-2">
-        <button id="headerBackHomeBtn" title="返回主页" class="w-7 h-7 rounded-lg bg-blue-700 text-white flex items-center justify-center font-bold text-xs shadow-sm hover:bg-blue-800 transition">
-          <i class="fa-solid fa-house text-[11px]"></i>
-        </button>
-        <div class="flex flex-col">
-          <span class="text-xs font-bold text-slate-900 leading-tight" id="headerMainTitle">罗氏题库</span>
-          <span class="text-[10px] text-slate-400" id="headerSubtitle">复习背题 & 在线测验</span>
-        </div>
-      </div>
-      <!-- 小程序胶囊菜单 -->
-      <div class="flex items-center bg-slate-100/90 border border-slate-200 rounded-full px-2.5 py-1 space-x-2 text-slate-600 text-xs">
-        <button id="toggleSheetBtn" title="答题卡/题号" class="hover:text-blue-600 flex items-center space-x-1">
-          <i class="fa-solid fa-table-cells text-[11px]"></i>
-          <span class="text-[10px] font-bold" id="cardNavNumber">0/0</span>
-        </button>
-        <span class="h-3 w-px bg-slate-300"></span>
-        <button id="headerSwitchModeBtn" title="切换模式" class="hover:text-indigo-600 text-[10px] font-bold px-1 text-indigo-600">切模式</button>
-        <span class="h-3 w-px bg-slate-300"></span>
-        <button id="headerRestartBtn" title="重新开始" class="hover:text-rose-600"><i class="fa-solid fa-rotate-right text-[11px]"></i></button>
-      </div>
-    </header>
-
-    <!-- 答题进度条 -->
-    <div id="quizProgressBar" class="w-full bg-slate-100 h-1.5 relative overflow-hidden hidden shrink-0">
-      <div id="progressFill" class="bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500 h-full w-0 transition-all duration-300"></div>
-    </div>
-
-    <!-- 核心视图展示区 -->
-    <div class="flex-1 relative overflow-y-auto custom-scrollbar p-4 flex flex-col">
-
-      <!-- ================= 视图 1：首页双板块入口 ================= -->
-      <section id="viewHome" class="flex-1 flex flex-col justify-between py-2 page-slide-enter">
-        <div class="text-center pt-2">
-          <div class="w-16 h-16 mx-auto rounded-3xl bg-gradient-to-tr from-blue-700 to-indigo-600 flex items-center justify-center text-white text-2xl shadow-xl shadow-blue-500/25 mb-3">
-            <i class="fa-solid fa-notes-medical"></i>
-          </div>
-          <span class="inline-block bg-blue-50 text-blue-700 font-bold text-xs px-3 py-1 rounded-full mb-1">Roche Diagnostics</span>
-          <h2 class="text-xl font-black text-slate-900 tracking-tight">罗氏专业知识与考核中心</h2>
-          <p class="text-xs text-slate-500 mt-1">请选择您需要进入的学习板块</p>
-        </div>
-
-        <!-- 双板块核心入口卡片 -->
-        <div class="space-y-3.5 my-auto">
-          <!-- 板块一：复习背题 -->
-          <div id="entryReviewCard" class="bg-gradient-to-r from-indigo-50 to-blue-50 hover:from-indigo-100 hover:to-blue-100 border-2 border-indigo-200/80 rounded-3xl p-4.5 cursor-pointer transition-all shadow-sm active:scale-[0.98]">
-            <div class="flex items-center justify-between mb-2">
-              <div class="flex items-center space-x-2.5">
-                <div class="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg shadow-md shadow-indigo-500/30">
-                  <i class="fa-solid fa-book-open-reader"></i>
-                </div>
-                <div>
-                  <h3 class="text-sm font-bold text-slate-900 flex items-center">
-                    复习背题板块
-                    <span class="ml-2 bg-indigo-600 text-white text-[9px] px-2 py-0.5 rounded-full font-bold">免答直接看答案</span>
-                  </h3>
-                  <p class="text-[11px] text-slate-500 mt-0.5">每页一题 · 官方正确答案与考点精解直显</p>
-                </div>
-              </div>
-              <i class="fa-solid fa-chevron-right text-indigo-400 text-xs"></i>
-            </div>
-            <div class="text-[11px] text-indigo-900/80 bg-white/70 rounded-xl px-3 py-1.5 flex items-center justify-between">
-              <span>单题单页 · 随时翻页背诵速记</span>
-              <span class="font-bold text-indigo-600">进入背题 &rarr;</span>
-            </div>
-          </div>
-
-          <!-- 板块二：在线测验 -->
-          <div id="entryQuizCard" class="bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 border-2 border-emerald-200/80 rounded-3xl p-4.5 cursor-pointer transition-all shadow-sm active:scale-[0.98]">
-            <div class="flex items-center justify-between mb-2">
-              <div class="flex items-center space-x-2.5">
-                <div class="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-lg shadow-md shadow-emerald-500/30">
-                  <i class="fa-solid fa-clipboard-check"></i>
-                </div>
-                <div>
-                  <h3 class="text-sm font-bold text-slate-900 flex items-center">
-                    测验实战板块
-                    <span class="ml-2 bg-emerald-600 text-white text-[9px] px-2 py-0.5 rounded-full font-bold">提交即判分</span>
-                  </h3>
-                  <p class="text-[11px] text-slate-500 mt-0.5">每页一题 · 自主作答提交后显示答案与解析</p>
-                </div>
-              </div>
-              <i class="fa-solid fa-chevron-right text-emerald-400 text-xs"></i>
-            </div>
-            <div class="text-[11px] text-emerald-900/80 bg-white/70 rounded-xl px-3 py-1.5 flex items-center justify-between">
-              <span>全真考场 · 成绩单与错题专练</span>
-              <span class="font-bold text-emerald-600">开始测验 &rarr;</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 统计面板 -->
-        <div class="grid grid-cols-3 gap-2 text-center mb-2">
-          <div class="bg-white p-2.5 rounded-2xl border border-slate-200/70">
-            <span class="block text-lg font-black text-slate-800" id="homeTotalCount">0</span>
-            <span class="text-[10px] text-slate-400">试题总数</span>
-          </div>
-          <div class="bg-white p-2.5 rounded-2xl border border-slate-200/70">
-            <span class="block text-lg font-black text-indigo-600">背题</span>
-            <span class="text-[10px] text-slate-400">直显答案</span>
-          </div>
-          <div class="bg-white p-2.5 rounded-2xl border border-slate-200/70">
-            <span class="block text-lg font-black text-emerald-600">测验</span>
-            <span class="text-[10px] text-slate-400">提交判分</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- ================= 视图 2：单题单页核心视图（复习与测验共用） ================= -->
-      <section id="viewQuiz" class="flex-1 flex flex-col justify-between py-1 hidden page-slide-enter">
-        <div class="space-y-3.5">
-          <!-- 题号与模式信息条 -->
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-              <span id="currentModeBadge" class="font-bold text-[11px] px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
-                复习背题模式
-              </span>
-              <span id="questionTypeBadge" class="bg-blue-100 text-blue-700 font-bold text-[11px] px-2.5 py-0.5 rounded-full">
-                单选题
-              </span>
-              <span id="questionStepText" class="text-xs font-semibold text-slate-500">
-                第 1 题
-              </span>
-            </div>
-            <span id="instantStatusBadge" class="text-[11px] font-bold hidden px-2.5 py-0.5 rounded-full"></span>
-          </div>
-
-          <!-- 题干 -->
-          <div class="bg-white rounded-3xl p-4 md:p-5 border border-slate-200/80 shadow-sm">
-            <h3 id="questionTitle" class="text-sm md:text-base font-bold text-slate-900 leading-relaxed">
-              题目内容加载中...
-            </h3>
-          </div>
-
-          <!-- 选项列表 -->
-          <div id="optionsContainer" class="space-y-2.5">
-            <!-- 动态生成选项卡片 -->
-          </div>
-
-          <!-- 正确答案与官方深度解析面板 -->
-          <div id="instantAnalysisBox" class="bg-emerald-50/90 border border-emerald-200 rounded-3xl p-4 hidden page-slide-enter">
-            <div class="flex items-center justify-between mb-2">
-              <div class="flex items-center space-x-1.5 text-xs font-bold text-emerald-800">
-                <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
-                <span>正确答案：<span id="correctAnswerKey" class="text-base font-black underline ml-1"></span></span>
-              </div>
-              <span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-semibold">考点解析</span>
-            </div>
-            <p id="analysisContent" class="text-xs text-slate-700 leading-relaxed bg-white/80 rounded-2xl p-3 border border-emerald-100">
-              解析内容加载中...
-            </p>
-          </div>
-        </div>
-
-        <!-- 底部操作按钮区域 -->
-        <div class="pt-3 pb-2 space-y-2">
-          <!-- 测验模式操作按钮 1：提交当前题目 -->
-          <button id="submitAnswerBtn" class="w-full py-3.5 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-2xl shadow-md shadow-blue-600/25 active:scale-[0.98] transition flex items-center justify-center space-x-2 text-sm">
-            <i class="fa-solid fa-check"></i>
-            <span>确认提交并查看答案</span>
-          </button>
-
-          <!-- 测验模式操作按钮 2：下一题（提交后显示） -->
-          <button id="nextQuestionBtn" class="w-full py-3.5 bg-slate-900 hover:bg-black text-white font-bold rounded-2xl shadow-md active:scale-[0.98] transition hidden items-center justify-center space-x-2 text-sm">
-            <span id="nextBtnText">进入下一题</span>
-            <i class="fa-solid fa-arrow-right"></i>
-          </button>
-
-          <!-- 复习背题模式专用操作按钮条：上一题 & 下一题并排 -->
-          <div id="reviewNavBar" class="grid grid-cols-2 gap-2 hidden">
-            <button id="reviewPrevBtn" class="py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl transition flex items-center justify-center space-x-1.5 text-xs">
-              <i class="fa-solid fa-arrow-left"></i>
-              <span>上一题</span>
-            </button>
-            <button id="reviewNextBtn" class="py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-md shadow-indigo-600/25 active:scale-[0.98] transition flex items-center justify-center space-x-1.5 text-xs">
-              <span id="reviewNextBtnText">下一题</span>
-              <i class="fa-solid fa-arrow-right"></i>
-            </button>
-          </div>
-
-          <!-- 测验模式下的上一题快捷链接 -->
-          <button id="prevQuestionBtn" class="w-full py-2 text-slate-400 hover:text-slate-600 text-xs font-medium transition flex items-center justify-center space-x-1">
-            <i class="fa-solid fa-chevron-left text-[10px]"></i>
-            <span>查看上一题</span>
-          </button>
-        </div>
-      </section>
-
-      <!-- ================= 视图 3：答题结算与成绩单 ================= -->
-      <section id="viewResult" class="flex-1 flex flex-col justify-between py-2 hidden page-slide-enter">
-        <div class="text-center pt-3">
-          <div id="resultScoreBadge" class="w-24 h-24 mx-auto rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex flex-col items-center justify-center text-white shadow-xl shadow-emerald-500/25 mb-3 border-4 border-white">
-            <span id="finalScoreText" class="text-3xl font-black leading-none">100</span>
-            <span class="text-[10px] font-semibold tracking-wider uppercase mt-1">最终得分</span>
-          </div>
-          <h2 id="resultEvaluationTitle" class="text-lg font-black text-slate-900">全卷测评完成</h2>
-          <p id="resultSubtitle" class="text-xs text-slate-500 mt-1">作答数据统计已生成</p>
-        </div>
-
-        <!-- 统计指标卡 -->
-        <div class="grid grid-cols-3 gap-2 my-3">
-          <div class="bg-white rounded-2xl p-3 border border-slate-200/80 text-center">
-            <span class="block text-base font-black text-blue-600" id="statTotalCount">0</span>
-            <span class="text-[10px] text-slate-400">总题数</span>
-          </div>
-          <div class="bg-white rounded-2xl p-3 border border-slate-200/80 text-center">
-            <span class="block text-base font-black text-emerald-600" id="statCorrectCount">0</span>
-            <span class="text-[10px] text-slate-400">答对</span>
-          </div>
-          <div class="bg-white rounded-2xl p-3 border border-slate-200/80 text-center">
-            <span class="block text-base font-black text-rose-600" id="statWrongCount">0</span>
-            <span class="text-[10px] text-slate-400">错题</span>
-          </div>
-        </div>
-
-        <!-- 作答分布图谱（支持点击回看） -->
-        <div class="bg-white rounded-3xl p-4 border border-slate-200/80 shadow-sm flex-1 flex flex-col mb-3">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-xs font-bold text-slate-700 flex items-center">
-              <i class="fa-solid fa-chart-pie text-blue-600 mr-1.5"></i>
-              作答分布图谱（点击题号回看）
-            </span>
-            <span class="text-[10px] text-slate-400">绿: 正确 | 红: 错误</span>
-          </div>
-          <div id="answerSheetDots" class="grid grid-cols-6 sm:grid-cols-7 gap-1.5 overflow-y-auto custom-scrollbar p-1 max-h-44">
-            <!-- 动态生成圆圈 -->
-          </div>
-        </div>
-
-        <!-- 操作按钮 -->
-        <div class="space-y-2">
-          <button id="retryWrongOnlyBtn" class="w-full py-3.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-2xl shadow-md shadow-rose-600/25 active:scale-[0.98] transition flex items-center justify-center space-x-2 text-sm hidden">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-            <span>专项重做错题 (<span id="wrongCountLabel">0</span>)</span>
-          </button>
-
-          <button id="restartAllBtn" class="w-full py-3 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-2xl shadow-md active:scale-[0.98] transition flex items-center justify-center space-x-2 text-sm">
-            <i class="fa-solid fa-rotate-right"></i>
-            <span>重新作答全卷</span>
-          </button>
-        </div>
-      </section>
-
-    </div>
-
-    <!-- 弹窗：题卡快速跳转抽屉 -->
-    <div id="sheetModal" class="absolute inset-0 bg-slate-900/60 backdrop-blur-xs z-30 hidden flex flex-col justify-end transition-opacity">
-      <div class="bg-white rounded-t-[32px] p-5 max-h-[75%] flex flex-col">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-          <div>
-            <h4 class="font-bold text-sm text-slate-800">试题快速跳转卡</h4>
-            <p class="text-[11px] text-slate-400">点击题号快速跳至对应题目</p>
-          </div>
-          <button id="closeSheetModalBtn" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
-        </div>
-        <div id="modalDotsContainer" class="grid grid-cols-6 gap-2 overflow-y-auto custom-scrollbar p-2 my-3 max-h-72">
-          <!-- 动态渲染题号 -->
-        </div>
-      </div>
-    </div>
-
-    <!-- 底部虚拟 Home 条 -->
-    <div class="w-28 h-1 bg-slate-300 rounded-full mx-auto my-2 shrink-0"></div>
-  </main>
-
-  <!-- 轻提示 Toast 弹窗 -->
-  <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900/90 text-white text-xs px-4 py-2.5 rounded-full shadow-2xl opacity-0 pointer-events-none transition-opacity duration-200 z-50 flex items-center space-x-2">
-    <i class="fa-solid fa-circle-info text-blue-400"></i>
-    <span id="toastMsg">提示信息</span>
   </div>
 
-  <script>
-    /**
-     * ============================================================
-     * 全局静态固化题库常量（罗氏专业题库深度内置）
-     * 涵盖单选、多选题型，官方考点深度解析，开箱即用
-     * ============================================================
-     */
-    let HARDCODED_BANK = [
-      {
-        id: 1,
-        type: "single",
-        question: "罗氏诊断（Roche Diagnostics）的核心业务主要涵盖四大领域，以下哪一项不属于四大业务领域之一？",
-        options: [
-          { key: "A", text: "中心实验室及体外诊断解决方案（Centralised and Point of Care Solutions）" },
-          { key: "B", text: "组织诊断（Tissue Diagnostics - Ventana）" },
-          { key: "C", text: "分子诊断（Molecular Diagnostics）" },
-          { key: "D", text: "放射影像与核磁共振设备研发（MRI & CT Hardware）" }
-        ],
-        answer: "D",
-        analysis: "罗氏诊断的核心业务聚焦于体外诊断（IVD），涵盖中心实验室、近旁检测（POC）、组织病理诊断（Ventana）、分子诊断以及糖尿病护理，不从事大型放射影像与核磁共振硬件设备的制造。"
-      },
-      {
-        id: 2,
-        type: "single",
-        question: "在罗氏中心实验室免疫分析平台中，广泛采用的核心检测技术是什么？",
-        options: [
-          { key: "A", text: "酶联免疫吸附测定（ELISA）" },
-          { key: "B", text: "电化学发光免疫测定法（ECLIA, Electro-Chemi-Luminescence）" },
-          { key: "C", text: "胶体金免疫层析法" },
-          { key: "D", text: "放射免疫测定法（RIA）" }
-        ],
-        answer: "B",
-        analysis: "罗氏专利的电化学发光（ECLIA）技术以三联吡啶钌与三丙胺（TPA）作为反应底物体系，具备极宽的线性动态范围、超高灵敏度以及优秀的批间稳定性。"
-      },
-      {
-        id: 3,
-        type: "single",
-        question: "罗氏 cobas 系列全自动化分析仪中，用于实现生化免疫一体化流水线高效连接的核心枢纽系统是？",
-        options: [
-          { key: "A", text: "cobas connection modules (CCM) 自动化流水线轨道" },
-          { key: "B", text: "cobas e 411 桌面分析仪" },
-          { key: "C", text: "Accu-Chek 血糖仪" },
-          { key: "D", text: "CoaguChek 凝血仪" }
-        ],
-        answer: "A",
-        analysis: "cobas connection modules (CCM) 是罗氏高效的自动化轨道传输系统，可无缝串联生化模块（如 cobas c 系列）、免疫模块（cobas e 系列）以及前处理与后处理系统。"
-      },
-      {
-        id: 4,
-        type: "multiple",
-        question: "【多选题】下列关于罗氏电化学发光（ECLIA）检测原理优势的描述中，正确的有？",
-        options: [
-          { key: "A", text: "三联吡啶钌在电极表面可多次循环发光，发光信号强且稳定" },
-          { key: "B", text: "线性动态范围宽，可达 5 至 6 个数量级，减少高浓度标本的稀释重测率" },
-          { key: "C", text: "反应时间短，绝大多数检测项目可在 18 分钟内出具报告" },
-          { key: "D", text: "试剂开瓶稳定性好，通常可稳定达数周甚至数月" }
-        ],
-        answer: "ABCD",
-        analysis: "ECLIA 电极激发机制不仅发光效率极高，而且钌配合物可在电极表面再生循环催化，具有检测时间快（多数项目 18 分钟或 STAT 9 分钟）、宽线性范围及出色的试剂稳定性等优势。"
-      },
-      {
-        id: 5,
-        type: "single",
-        question: "罗氏在病理组织诊断领域的核心品牌是哪一个？",
-        options: [
-          { key: "A", text: "Ventana（范塔纳）" },
-          { key: "B", text: "cobas" },
-          { key: "C", text: "LightCycler" },
-          { key: "D", text: "MagNA Pure" }
-        ],
-        answer: "A",
-        analysis: "Ventana（范塔纳）是罗氏病理组织诊断的核心品牌，主要产品包括全自动免疫组化（IHC）染色平台与原位杂交（ISH）染色系统。"
-      },
-      {
-        id: 6,
-        type: "single",
-        question: "在分子诊断领域，罗氏著名的实时荧光定量 PCR 仪产品系列名称是？",
-        options: [
-          { key: "A", text: "LightCycler 系列" },
-          { key: "B", text: "Elecsys 系列" },
-          { key: "C", text: "Hitachi 7180" },
-          { key: "D", text: "Ventana BenchMark" }
-        ],
-        answer: "A",
-        analysis: "LightCycler（如 LightCycler 480、LightCycler 96）是罗氏分子诊断旗下广受认可的荧光定量 PCR 仪系列。"
-      },
-      {
-        id: 7,
-        type: "multiple",
-        question: "【多选题】罗氏始终倡导的“个体化医疗（Personalised Healthcare, PHC）”战略的核心理念体现在？",
-        options: [
-          { key: "A", text: "结合前沿诊断技术与靶向药物研发" },
-          { key: "B", text: "在恰当的时间，为适宜的患者提供最精准的治疗方案" },
-          { key: "C", text: "通过伴随诊断（CDx）指导靶向药的使用与疗效监测" },
-          { key: "D", text: "推动真实世界数据（RWD）在临床医学研究中的深度应用" }
-        ],
-        answer: "ABCD",
-        analysis: "罗氏同时拥有制药与诊断两大支柱业务，其 PHC 战略强调依托诊断精准分型（伴随诊断）配合靶向治疗药物，并利用真实世界临床数据持续赋能精准医疗。"
-      },
-      {
-        id: 8,
-        type: "single",
-        question: "罗氏生化检验中常用的多项通用定标液简称是？",
-        options: [
-          { key: "A", text: "C.f.a.s (Calibrator for automated systems)" },
-          { key: "B", text: "PreciControl Universal" },
-          { key: "C", text: "Elecsys CalSet" },
-          { key: "D", text: "Multi-Cal 100" }
-        ],
-        answer: "A",
-        analysis: "C.f.a.s 全称为 Calibrator for automated systems，是罗氏全自动生化分析仪上针对多项常规生化检验的标准多项定标物。"
-      },
-      {
-        id: 9,
-        type: "single",
-        question: "罗氏诊断的 Elecsys 免疫试剂盒中，用于捕获抗原抗体复合物的固相载体通常是？",
-        options: [
-          { key: "A", text: "包被有链霉亲和素（Streptavidin）的顺磁性微粒" },
-          { key: "B", text: "聚苯乙烯平底反应板凹槽" },
-          { key: "C", text: "纳米金胶体颗粒" },
-          { key: "D", text: "硝酸纤维素膜" }
-        ],
-        answer: "A",
-        analysis: "罗氏电化学发光试剂采用链霉亲和素包被的顺磁性微球（Streptavidin-coated microparticles），利用生物素-链霉亲和素间极高的亲和力实现高效捕获，并在电极表面进行磁分离。"
-      },
-      {
-        id: 10,
-        type: "multiple",
-        question: "【多选题】下列罗氏诊断质控体系管理中，属于免疫分析专属质控品命名系列的为？",
-        options: [
-          { key: "A", text: "PreciControl Cardiac（心肌标志物质控）" },
-          { key: "B", text: "PreciControl Tumor Marker（肿瘤标志物质控）" },
-          { key: "C", text: "PreciControl Bone（骨代谢质控）" },
-          { key: "D", text: "AutoClean Detergent" }
-        ],
-        answer: "ABC",
-        analysis: "PreciControl 是罗氏 Elecsys 平台质控液的标准命名，如 Cardiac、Tumor Marker、Bone、Maternal 等；而 AutoClean 为仪器清洗液，并非质控品。"
-      }
-    ];
+  <!-- 移动端容器 -->
+  <div class="phone-simulator">
+    <!-- 胶囊顶栏 -->
+    <div class="wx-capsule-bar">
+      <span class="app-title-mini" id="top-title">岗位考试测评</span>
+      <div class="wx-capsule">
+        <span class="capsule-btn" onclick="goHome()">🏠 首页</span>
+        <span style="color:#cbd5e1;">|</span>
+        <span class="capsule-btn" onclick="toggleMode()">切模式</span>
+      </div>
+    </div>
 
-    const LOCAL_STORAGE_KEY = 'ROCHE_REAL_EXAM_STORE_FINAL';
-    let questionBank = [];
-    let currentIndex = 0;
-    let userAnswers = {};
-    let isSubmittedCurrent = false;
-    let wrongQuestionIds = [];
-    let qrcodeInstance = null;
-    let onlineBaseUrl = "https://stefanie2027.github.io/exam/";
+    <!-- 岗位切换器 -->
+    <div class="role-switch-container">
+      <div class="role-pill-group">
+        <div class="role-pill active" id="pill-channel" onclick="switchRole('channel')">渠道岗 (120题)</div>
+        <div class="role-pill" id="pill-eco" onclick="switchRole('eco')">生态岗</div>
+      </div>
+    </div>
 
-    // 当前运行板块：'review'(复习背题) 或 'quiz'(测验实战)
-    let currentAppMode = 'quiz';
+    <!-- 主展示区 -->
+    <div class="screen-body" id="screen-body"></div>
 
-    // 初始化题库：优先使用 HARDCODED_BANK，其次读取 LocalStorage 缓存
-    function initQuestionData() {
-      if (HARDCODED_BANK && Array.isArray(HARDCODED_BANK) && HARDCODED_BANK.length > 0) {
-        questionBank = HARDCODED_BANK;
-        setBankSourceUI(`已内置罗氏题库(${HARDCODED_BANK.length}题)`, 'bg-emerald-100 text-emerald-800');
-        return;
-      }
+    <!-- 底部按钮区 -->
+    <div class="bottom-bar" id="bottom-bar"></div>
+  </div>
+</div>
 
-      try {
-        const cached = localStorage.getItem(LOCAL_STORAGE_KEY);
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            questionBank = parsed;
-            setBankSourceUI(`已读取本地缓存(${parsed.length}题)`, 'bg-blue-100 text-blue-800');
-            return;
-          }
-        }
-      } catch (e) {
-        console.warn('缓存读取失败', e);
-      }
+<script>
+// ================= 渠道岗与生态岗题库数据全量内嵌 =================
+const QUESTION_DATABASE = {
+  // 渠道岗题目（汇整自 6 份专属 Word 试卷共 120 题）
+  channel: [
+    // 1. 渠道布局
+    {
+      module: "渠道布局",
+      type: "multi",
+      title: "药店布局产品勾选应遵循什么原则？",
+      options: ["为了节约老板审批次数，尽量勾全产品以避免未来重复审批", "与8大TA沟通好，有明确患者需求的再勾选", "外包产品原则上非必要不布局"],
+      answer: "BC",
+      explain: "考点解析：药店布局原则要求必须有明确患者需求，同时外包产品非必要不布局。"
+    },
+    {
+      module: "渠道布局",
+      type: "fill",
+      title: "艾满欣药店布局申请邮件通过后可以直接进系统申请吗？如果不是，应在_________流程之后才可以系统申请。",
+      options: [],
+      answer: "否，应先经过新业极的配液资质审核后才能申请",
+      explain: "考点解析：艾满欣需先经过新业极配液资质审核通过后才可在系统正式申请。"
+    },
+    {
+      module: "渠道布局",
+      type: "fill",
+      title: "2025年哪些产品不能勾选调拨折扣？________，但在__________________业务场景下，在非___________的_______级商上可以勾选。",
+      options: [],
+      answer: "艾满欣、泰圣奇、优罗华、罗视佳、赫双妥；医院配送一级商向二级商调拨场景；同集团；二级商",
+      explain: "考点解析：明确调拨折扣五大受限产品及特定二级商调拨例外场景。"
+    },
+    {
+      module: "渠道布局",
+      type: "fill",
+      title: "店联体药店新增产品布局时，布局产品___________母店产品范围。",
+      options: [],
+      answer: "不能超过",
+      explain: "考点解析：店联体新增范围受母店严格约束，绝不能超过母店产品范围。"
+    },
+    {
+      module: "渠道布局",
+      type: "fill",
+      title: "新开户药店如果想经营速福达，能否布局？________（Y/N）。若要经营，应该向_________拿货。",
+      options: [],
+      answer: "N；华润山东（或华润商贸）",
+      explain: "考点解析：速福达零售进货遵循专属总代供货通路。"
+    },
+    {
+      module: "渠道布局",
+      type: "judge",
+      title: "NRDL布局时审批过定为“规划”的商业，在实际发生业务需求时，是否需要发邮件走审批流程后才可以进系统申请？",
+      options: ["Y (是)", "N (否)"],
+      answer: "B",
+      explain: "考点解析：已审批为规划的商业无需再邮件审批，可直接系统申请。"
+    },
+    {
+      module: "渠道布局",
+      type: "single",
+      title: "医院要求出商业配送函时，我确认配送商业与已审批的布局一致时，下一步我就可以________",
+      options: ["走盖章流程", "获得大区审批后走盖章流程", "获得大区审批，渠道策略与运营团队复核后，走盖章流程"],
+      answer: "C",
+      explain: "考点解析：出配送函必须经过大区审批与渠道策略与运营团队双重复核。"
+    },
+    {
+      module: "渠道布局",
+      type: "single",
+      title: "店联体药店开户过程中，提交系统申请时以下哪个不是需要上传的扫描件？",
+      options: ["营业执照（加盖药店公章）", "药品经营许可证（加盖药店公章）", "一级商出具的店联体承诺函（加盖一级商公章）", "信息数据合规承诺函（每页加盖药店公章）", "业务伙伴合规承诺函（加盖药店公章）"],
+      answer: "E",
+      explain: "考点解析：店联体开户仅需一级商承诺函，不需要单独的业务伙伴合规承诺函。"
+    },
+    {
+      module: "渠道布局",
+      type: "multi",
+      title: "FY25罗盘项目包含哪些产品？",
+      options: ["赫双妥", "帕捷特", "赫赛汀", "赫赛汀（皮下注射）", "赫赛莱"],
+      answer: "ABCD",
+      explain: "考点解析：FY25 罗盘项目涵盖赫双妥、帕捷特、赫赛汀及皮下注射制剂。"
+    },
+    {
+      module: "渠道布局",
+      type: "single",
+      title: "福达万家项目FY25合作周期的时间范围是？",
+      options: ["2025年1月1日-2025年12月31日", "2025年1月1日-2026年3月31日", "2025年4月1日-2026年3月31日", "2025年4月1日-2025年12月31日"],
+      answer: "C",
+      explain: "考点解析：FY25 福达万家合作周期为 2025年4月1日至2026年3月31日。"
+    },
+
+    // 2. 渠道供应运营
+    {
+      module: "渠道供应",
+      type: "single",
+      title: "以下哪个不属于商业补货预测发布邮件中涉及特定产品信息分享？",
+      options: ["公司在发近效期药品(效期短于300天)", "产品信息变更预计一个月内供货药品", "特殊订单适用的产品范围", "近效期药品库存处置沟通函"],
+      answer: "D",
+      explain: "考点解析：近效期库存处置沟通函不属于常规补货预测发布范围。"
+    },
+    {
+      module: "渠道供应",
+      type: "single",
+      title: "以下哪项不是经销商提升授信额度的措施：",
+      options: ["承兑汇票", "Waiver审批", "担保合同", "质押票据"],
+      answer: "A",
+      explain: "考点解析：承兑汇票是支付结算方式，不属于提升授信额度的措施。"
+    },
+    {
+      module: "渠道供应",
+      type: "multi",
+      title: "以下哪些情况适用于特殊订单范围？",
+      options: ["流感季速福达供货", "新进NRDL6个月内产品供货", "有供应短缺风险采取精准分货", "新上市6个月内产品供货", "为配合班车路线订单发货延后"],
+      answer: "ABCD",
+      explain: "考点解析：特殊订单涵盖流感季供货、新进医保、精准分货及新上市特定周期供货。"
+    },
+    {
+      module: "渠道供应",
+      type: "fill",
+      title: "罗氏发运时效，常规空运到货时间为（ ）小时内。",
+      options: [],
+      answer: "48",
+      explain: "考点解析：常规空运服务时效承诺为 48 小时内抵达。"
+    },
+    {
+      module: "渠道供应",
+      type: "fill",
+      title: "罗氏账期客户标准回款时间为（ ）天。",
+      options: [],
+      answer: "45",
+      explain: "考点解析：标准账期管理回款时效为 45 天。"
+    },
+
+    // 3. 商业合规
+    {
+      module: "商业合规",
+      type: "single",
+      title: "MCE对经销商及药店开展审计的频率至少是：",
+      options: ["每季度", "每半年", "每年", "按需"],
+      answer: "C",
+      explain: "考点解析：合规审计要求对经销商及药店至少每年开展一次常规审计。"
+    },
+    {
+      module: "商业合规",
+      type: "single",
+      title: "若存在进销存数据差异，MCE采取相应必要措施，包括聘请第三方进行审计和（ ）",
+      options: ["资质审核", "实地盘库", "人员访谈", "流程验证"],
+      answer: "B",
+      explain: "考点解析：进销存差异核查的核心抓手包括实地盘库与第三方审计。"
+    },
+    {
+      module: "商业合规",
+      type: "multi",
+      title: "经销商及药店在药品经营过程中，需要保证信息数据及其支持单据的（ ）",
+      options: ["真实性", "准确性", "完整性", "必要性"],
+      answer: "ABC",
+      explain: "考点解析：医药合规数据三大底线原则：真实性、准确性、完整性。"
+    },
+    {
+      module: "商业合规",
+      type: "fill",
+      title: "根据《处方管理办法》，处方开具当日有效，特殊情况下需延长有效期的，由开具处方的医师注明有效期限，但有效期最长不得超过（ ）天。",
+      options: [],
+      answer: "3",
+      explain: "考点解析：处方最长延期有效期不得超过 3 天。"
+    },
+
+    // 4. 商业运营
+    {
+      module: "商业运营",
+      type: "single",
+      title: "所有商业类型都需要完成的培训是：",
+      options: ["药物警戒培训", "合规培训", "SHE培训", "质量培训"],
+      answer: "B",
+      explain: "考点解析：合规培训覆盖全部商业类型，属于强制全员准入项。"
+    },
+    {
+      module: "商业运营",
+      type: "multi",
+      title: "一级商需要完成如下哪些协议类别的签署？",
+      options: ["购销类协议", "质保类协议", "安全类协议", "合规类协议", "数据类协议"],
+      answer: "ABCE",
+      explain: "考点解析：一级商合同包涵盖购销、质保、安全及数据共享协议。"
+    },
+    {
+      module: "商业运营",
+      type: "fill",
+      title: "合作中商业需每（ ）年进行周期性尽职调查。",
+      options: [],
+      answer: "3",
+      explain: "考点解析：尽调报告有效期为 36 个月（3 年）。"
+    },
+
+    // 5. 商业折扣
+    {
+      module: "商业折扣",
+      type: "single",
+      title: "零售价格省标化折扣的申请文件中，必须加盖哪方公章？",
+      options: ["协议药店公章", "供货协议经销商公章", "协议药店和供货经销商双方公章", "罗氏CMA部门章"],
+      answer: "C",
+      explain: "考点解析：省标化折扣必须包含药店及供货经销商双方公章互认。"
+    },
+    {
+      module: "商业折扣",
+      type: "single",
+      title: "出厂价格调整折扣的计算公式是？",
+      options: ["(原含税出厂价 - 新含税出厂价) × 数量", "(原纯销底价 - 新纯销底价) × 数量", "(中标价 × 折扣比例) × 数量", "纯销底价 × 抽样数量"],
+      answer: "B",
+      explain: "考点解析：出厂价格调整依据纯销底价差值与核定数量计算。"
+    },
+    {
+      module: "商业折扣",
+      type: "fill",
+      title: "折扣申请的提交时限是实际需求发生后（ ）内。",
+      options: [],
+      answer: "1个月",
+      explain: "考点解析：时限明确要求在业务实际发生后 1 个月内提出申请。"
+    },
+
+    // 6. 渠道数据
+    {
+      module: "渠道数据",
+      type: "single",
+      title: "所有经销商及药店的数据错误导致的调整均须提供由经销商及药店盖章（ ）的相关交易证明文件",
+      options: ["公章、业务章、财务章", "公章、流向章、合同章", "公章、流向章、财务章", "公章、业务章、流向章"],
+      answer: "D",
+      explain: "考点解析：证明文件需加盖公章、业务章或专属流向章。"
+    },
+    {
+      module: "渠道数据",
+      type: "multi",
+      title: "以下哪些销量不应计入市场销量？",
+      options: ["捐赠", "样品", "对医院的货品赔偿", "电商销量"],
+      answer: "ABC",
+      explain: "考点解析：捐赠、样品及损毁货品赔偿均不得计入正常商业销售。"
+    },
+    {
+      module: "渠道数据",
+      type: "fill",
+      title: "DDI数据取数时间节点要求为业务发生次日（ ）点之前，传输截止前一日的业务数据。",
+      options: [],
+      answer: "8",
+      explain: "考点解析：DDI 接口规定每日早 8:00 前完成前一日数据归集。"
     }
+  ],
 
-    function setBankSourceUI(text, colorClass) {
-      const tag = document.getElementById('bankSourceTag');
-      if (tag) {
-        tag.textContent = text;
-        tag.className = `ml-2 text-[10px] px-2 py-0.5 rounded-full font-bold ${colorClass}`;
-      }
+  // 生态岗题目（战略、HR、准入、新业极）
+  eco: [
+    {
+      module: "CE-O四大战略",
+      type: "single",
+      title: "罗氏在强化核心领域的竞争战略中，核心聚焦的疾病诊疗领域是：",
+      options: ["肿瘤、血液、神经科学及眼科", "心脑血管与普通外科", "呼吸科与抗生素全科", "普通消化系统疾病"],
+      answer: "A",
+      explain: "考点解析：四大战略强调强化核心专科阵地，精准聚焦肿瘤、血液学、神经病学及眼科。"
+    },
+    {
+      module: "HR合规与组织",
+      type: "single",
+      title: "罗氏行为准则中，针对员工与外部商业伙伴互动时，首要遵守的核心原则是：",
+      options: ["合规经营与反商业贿赂", "商业利益最大化", "优先达成个人年度考评目标", "以口头承诺为主灵活变通"],
+      answer: "A",
+      explain: "考点解析：罗氏全员行为规范坚持零容忍的反商业贿赂与严格合规底线。"
+    },
+    {
+      module: "MCE准入实战",
+      type: "single",
+      title: "在医疗机构准入推进中，'双通道'政策核心落地的承接载体为：",
+      options: ["定点医疗机构与定点零售药店（DTP）", "基层卫生服务中心", "互联网第三方无资质电商", "仅限一级批发商业仓库"],
+      answer: "A",
+      explain: "考点解析：双通道明确是指医保定点医疗机构与定点零售药店协同保障通道。"
+    },
+    {
+      module: "新业极核心考点",
+      type: "multi",
+      title: "新业极生态模式下，推动患者诊疗全病程管理的关键要素包括：",
+      options: ["早期早筛与精准诊断", "标准化治疗方案普及", "数字化患者随访与院外用药管理", "仅关注一次性开单进药"],
+      answer: "ABC",
+      explain: "考点解析：新业极全病程模式涵盖早筛诊断、规范治疗以及院外持续患者随访管理。"
+    },
+    {
+      module: "新业极业务考点",
+      type: "judge",
+      title: "艾满欣等特殊制剂必须完成配液中心或指定药店的资质验收及培训后方可准入供应。",
+      options: ["正确 (Y)", "错误 (N)"],
+      answer: "A",
+      explain: "考点解析：特药配置与冷链安全性要求必须经过前置资质认定与严谨考核。"
     }
+  ]
+};
 
-    window.addEventListener('DOMContentLoaded', () => {
-      initQuestionData();
+// ================= 应用状态管理 =================
+let currentRole = "channel"; // 'channel' | 'eco'
+let currentMode = "home";    // 'home' | 'study' | 'quiz' | 'result'
+let currentIndex = 0;
+let userAnswers = {};
+let hasSubmitted = {};
 
-      const urlParams = new URLSearchParams(window.location.search);
-      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      
-      // 移动端或带有特定参数时隐藏桌面面板
-      if (isMobileDevice || urlParams.get('mode') === 'quiz' || urlParams.get('mode') === 'review') {
-        const desktopPanel = document.getElementById('desktopPanel');
-        if (desktopPanel) desktopPanel.classList.add('hidden');
+function getCurrentBank() {
+  return QUESTION_DATABASE[currentRole] || [];
+}
+
+// 岗位切换
+function switchRole(role) {
+  currentRole = role;
+  document.getElementById("pill-channel").className = role === 'channel' ? "role-pill active" : "role-pill";
+  document.getElementById("pill-eco").className = role === 'eco' ? "role-pill active" : "role-pill";
+  goHome();
+}
+
+// 返回首页
+function goHome() {
+  currentMode = "home";
+  currentIndex = 0;
+  userAnswers = {};
+  hasSubmitted = {};
+  renderHome();
+}
+
+// 切换模式（复习 vs 测验）
+function toggleMode() {
+  if (currentMode === "study") {
+    startQuiz();
+  } else {
+    startStudy();
+  }
+}
+
+// 渲染首页
+function renderHome() {
+  const bank = getCurrentBank();
+  const roleName = currentRole === 'channel' ? "渠道岗" : "生态岗";
+  document.getElementById("top-title").innerText = `${roleName}测评系统`;
+
+  const html = `
+    <div style="background:linear-gradient(135deg, #0066cc, #0284c7); padding:20px; border-radius:var(--radius-md); color:#fff; margin-bottom:16px;">
+      <h3 style="font-size:18px; margin-bottom:6px;">${roleName} 专业题库</h3>
+      <p style="font-size:13px; opacity:0.9;">当前题量：<b>${bank.length}</b> 题 (单选/多选/判断/填空)</p>
+    </div>
+
+    <div class="mode-select-card" onclick="startStudy()">
+      <div style="display:flex; align-items:center;">
+        <div class="mode-icon" style="background:#e0f2fe; color:#0284c7;">📖</div>
+        <div class="mode-info">
+          <h4>复习背题板块</h4>
+          <p>每页一题，直出正确答案与官方深度解析</p>
+        </div>
+      </div>
+      <span style="color:#94a3b8; font-size:18px;">➔</span>
+    </div>
+
+    <div class="mode-select-card" onclick="startQuiz()">
+      <div style="display:flex; align-items:center;">
+        <div class="mode-icon" style="background:#fef3c7; color:#d97706;">✍️</div>
+        <div class="mode-info">
+          <h4>测验考核板块</h4>
+          <p>自主作答，提交后即时判分并高亮正解</p>
+        </div>
+      </div>
+      <span style="color:#94a3b8; font-size:18px;">➔</span>
+    </div>
+  `;
+  document.getElementById("screen-body").innerHTML = html;
+  document.getElementById("bottom-bar").innerHTML = `<button class="btn-main" onclick="startStudy()">立即开始复习</button>`;
+}
+
+function startStudy() {
+  currentMode = "study";
+  currentIndex = 0;
+  renderQuestion();
+}
+
+function startQuiz() {
+  currentMode = "quiz";
+  currentIndex = 0;
+  userAnswers = {};
+  hasSubmitted = {};
+  renderQuestion();
+}
+
+// 渲染单个题目页面
+function renderQuestion() {
+  const bank = getCurrentBank();
+  if (currentIndex >= bank.length) {
+    if (currentMode === "quiz") return renderQuizResult();
+    currentIndex = 0;
+  }
+  const q = bank[currentIndex];
+  const isStudy = currentMode === "study";
+  const isSubmitted = hasSubmitted[currentIndex] || false;
+  const userAns = userAnswers[currentIndex] || "";
+
+  document.getElementById("top-title").innerText = `${isStudy ? "背题复习" : "测验作答"} (${currentIndex + 1}/${bank.length})`;
+
+  let typeBadge = `<span class="badge-tag badge-single">单选题</span>`;
+  if (q.type === 'multi') typeBadge = `<span class="badge-tag badge-multi">多选题</span>`;
+  if (q.type === 'judge') typeBadge = `<span class="badge-tag badge-judge">判断题</span>`;
+  if (q.type === 'fill') typeBadge = `<span class="badge-tag badge-fill">填空题</span>`;
+
+  let contentHtml = `
+    <div class="quiz-card">
+      <div class="question-header">
+        <div>${typeBadge} <span style="font-size:11px; color:#64748b; margin-left:4px;">${q.module}</span></div>
+        <span class="q-index-text">${currentIndex + 1} / ${bank.length}</span>
+      </div>
+      <div class="question-title">${q.title}</div>
+  `;
+
+  // 选项或填空输入
+  if (q.type === 'fill') {
+    contentHtml += `
+      <div class="fill-box">
+        <input type="text" class="fill-input" id="fill-val" placeholder="请输入你的答案..." 
+          value="${userAns}" ${isSubmitted || isStudy ? 'disabled' : ''} oninput="recordFill(this.value)" />
+      </div>
+    `;
+  } else {
+    contentHtml += `<div class="option-list">`;
+    q.options.forEach((opt, idx) => {
+      const code = String.fromCharCode(65 + idx);
+      let cls = "option-item";
+
+      if (isStudy) {
+        // 复习模式直接高亮标准答案
+        if (q.answer.includes(code)) cls += " correct";
+      } else if (isSubmitted) {
+        // 测验提交后对比
+        if (q.answer.includes(code)) cls += " correct";
+        else if (userAns.includes(code)) cls += " wrong";
+      } else {
+        if (userAns.includes(code)) cls += " selected";
       }
 
-      // 根据 URL 直达特定模式
-      if (urlParams.get('mode') === 'review') {
-        startMode('review');
-      } else if (urlParams.get('autostart') === '1' && questionBank.length > 0) {
-        startMode('quiz');
-      }
-
-      updateAllCounters();
-      initQRCode();
-      bindEvents();
+      contentHtml += `
+        <div class="${cls}" onclick="handleOptionClick('${code}')">
+          <div class="option-code">${code}</div>
+          <div>${opt}</div>
+        </div>
+      `;
     });
+    contentHtml += `</div>`;
+  }
 
-    function updateAllCounters() {
-      const total = questionBank.length;
-      document.getElementById('sidebarQuestionCount').textContent = total;
-      document.getElementById('homeTotalCount').textContent = total;
-      document.getElementById('cardNavNumber').textContent = `${currentIndex + 1}/${total}`;
-      document.getElementById('headerSubtitle').textContent = `共 ${total} 题 · 双板块架构`;
+  // 解析区域（复习模式直接展示；测验模式提交后展示）
+  if (isStudy || isSubmitted) {
+    let borderCls = isStudy ? "" : (userAns === q.answer ? "correct-border" : "wrong-border");
+    contentHtml += `
+      <div class="explain-card ${borderCls}">
+        <div class="explain-title">
+          <span>🎯 正确答案：<b>${q.answer}</b></span>
+        </div>
+        <div style="color:#475569; margin-top:4px;">${q.explain}</div>
+      </div>
+    `;
+  }
+
+  contentHtml += `</div>`;
+  document.getElementById("screen-body").innerHTML = contentHtml;
+
+  // 底部按钮渲染
+  renderBottomBar(bank.length, isStudy, isSubmitted);
+}
+
+function handleOptionClick(code) {
+  if (currentMode === "study" || hasSubmitted[currentIndex]) return;
+  const q = getCurrentBank()[currentIndex];
+  let cur = userAnswers[currentIndex] || "";
+
+  if (q.type === "multi") {
+    if (cur.includes(code)) {
+      cur = cur.replace(code, "");
+    } else {
+      cur = (cur + code).split("").sort().join("");
     }
+  } else {
+    cur = code;
+  }
+  userAnswers[currentIndex] = cur;
+  renderQuestion();
+}
 
-    function initQRCode() {
-      const qrTarget = document.getElementById('qrcode');
-      qrTarget.innerHTML = '';
+function recordFill(val) {
+  userAnswers[currentIndex] = val.trim();
+}
 
-      const selectedMode = document.querySelector('input[name="qrModeOption"]:checked')?.value || 'quiz';
-      const cleanUrl = onlineBaseUrl.split('?')[0].replace(/\/+$/, '') + '/';
-      const scanUrl = cleanUrl + `?mode=${selectedMode}&autostart=1`;
-
-      qrcodeInstance = new QRCode(qrTarget, {
-        text: scanUrl,
-        width: 140,
-        height: 140,
-        colorDark: (selectedMode === 'review' ? "#4338ca" : "#1d4ed8"),
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.H
-      });
+function renderBottomBar(total, isStudy, isSubmitted) {
+  let barHtml = "";
+  if (isStudy) {
+    barHtml = `
+      <button class="btn-secondary" onclick="prevQ()" ${currentIndex === 0 ? 'disabled' : ''}>上一题</button>
+      <button class="btn-main" onclick="nextQ()">${currentIndex === total - 1 ? '完成复习' : '下一题'}</button>
+    `;
+  } else {
+    if (!isSubmitted) {
+      barHtml = `<button class="btn-main" onclick="submitCurrentQ()">确认提交答案</button>`;
+    } else {
+      barHtml = `
+        <button class="btn-secondary" onclick="prevQ()" ${currentIndex === 0 ? 'disabled' : ''}>上一题</button>
+        <button class="btn-main" onclick="nextQ()">${currentIndex === total - 1 ? '查看答题成绩' : '下一题'}</button>
+      `;
     }
+  }
+  document.getElementById("bottom-bar").innerHTML = barHtml;
+}
 
-    function bindEvents() {
-      // 首页双板块卡片点击
-      document.getElementById('entryReviewCard').addEventListener('click', () => startMode('review'));
-      document.getElementById('entryQuizCard').addEventListener('click', () => startMode('quiz'));
+function submitCurrentQ() {
+  const ans = userAnswers[currentIndex];
+  if (!ans) {
+    alert("请先选择或输入答案！");
+    return;
+  }
+  hasSubmitted[currentIndex] = true;
+  renderQuestion();
+}
 
-      // 顶部小程序胶囊导航控制
-      document.getElementById('headerBackHomeBtn').addEventListener('click', () => {
-        showView(document.getElementById('viewHome'));
-        document.getElementById('quizProgressBar').classList.add('hidden');
-        document.getElementById('headerMainTitle').textContent = '罗氏题库';
-      });
-
-      document.getElementById('headerSwitchModeBtn').addEventListener('click', () => {
-        const targetMode = currentAppMode === 'review' ? 'quiz' : 'review';
-        startMode(targetMode);
-        showToast(`已切换至【${targetMode === 'review' ? '复习背题板块' : '测验实战板块'}】`);
-      });
-
-      document.getElementById('headerRestartBtn').addEventListener('click', () => {
-        if (confirm('确定要重新开始当前板块吗？')) resetCurrentMode();
-      });
-      document.getElementById('restartAllBtn').addEventListener('click', () => startMode('quiz'));
-
-      // 测验模式答题与解析
-      document.getElementById('submitAnswerBtn').addEventListener('click', submitCurrentAnswer);
-      document.getElementById('nextQuestionBtn').addEventListener('click', gotoNextQuestion);
-      document.getElementById('prevQuestionBtn').addEventListener('click', gotoPrevQuestion);
-      document.getElementById('retryWrongOnlyBtn').addEventListener('click', startWrongPractice);
-
-      // 复习背题模式专用前后翻页
-      document.getElementById('reviewPrevBtn').addEventListener('click', gotoPrevQuestion);
-      document.getElementById('reviewNextBtn').addEventListener('click', gotoNextQuestion);
-
-      // 题卡抽屉
-      document.getElementById('toggleSheetBtn').addEventListener('click', openSheetModal);
-      document.getElementById('closeSheetModalBtn').addEventListener('click', closeSheetModal);
-      document.getElementById('sheetModal').addEventListener('click', (e) => {
-        if (e.target.id === 'sheetModal') closeSheetModal();
-      });
-
-      // 切换二维码生成模式
-      document.querySelectorAll('input[name="qrModeOption"]').forEach(r => {
-        r.addEventListener('change', initQRCode);
-      });
-
-      // 网址与二维码配置
-      document.getElementById('updateUrlBtn').addEventListener('click', () => {
-        const val = document.getElementById('targetUrlInput').value.trim();
-        if (!val) return showToast('请输入有效的答题网址');
-        onlineBaseUrl = val;
-        initQRCode();
-        showToast('微信二维码已更新！');
-      });
-
-      document.getElementById('copyUrlBtn').addEventListener('click', () => {
-        const selectedMode = document.querySelector('input[name="qrModeOption"]:checked')?.value || 'quiz';
-        const cleanUrl = onlineBaseUrl.split('?')[0].replace(/\/+$/, '') + '/';
-        const scanUrl = cleanUrl + `?mode=${selectedMode}&autostart=1`;
-        navigator.clipboard.writeText(scanUrl).then(() => {
-          showToast('链接已复制！微信发送即可打开');
-        }).catch(() => {
-          prompt('请复制答题网址：', scanUrl);
-        });
-      });
-
-      document.getElementById('downloadQrBtn').addEventListener('click', () => {
-        const qrImg = document.querySelector('#qrcode img');
-        if (qrImg && qrImg.src) {
-          const a = document.createElement('a');
-          a.href = qrImg.src;
-          a.download = `罗氏题库_${currentAppMode === 'review' ? '复习' : '测验'}_二维码.png`;
-          a.click();
-          showToast('二维码已保存！');
-        } else {
-          showToast('二维码生成中，请稍候');
-        }
-      });
-
-      // 上传 Excel 文件并自动解析
-      document.getElementById('excelFileInput').addEventListener('change', handleExcelUpload);
-
-      // 导出已刻录当前题库的 HTML 源码文件
-      document.getElementById('exportEmbeddedHtmlBtn').addEventListener('click', exportEmbeddedHtml);
-
-      // 恢复内置初始题库
-      document.getElementById('resetToDefaultBtn').addEventListener('click', () => {
-        if (confirm('确定要恢复系统默认的内置题库吗？')) {
-          localStorage.removeItem(LOCAL_STORAGE_KEY);
-          location.reload();
-        }
-      });
+function nextQ() {
+  const bank = getCurrentBank();
+  if (currentIndex < bank.length - 1) {
+    currentIndex++;
+    renderQuestion();
+  } else {
+    if (currentMode === "quiz") {
+      renderQuizResult();
+    } else {
+      alert("🎉 恭喜！您已完成该岗位全部题目的复习！");
+      goHome();
     }
+  }
+}
 
-    /**
-     * ============================================================
-     * 板块启动与界面渲染调度
-     * ============================================================
-     */
-    function startMode(mode) {
-      currentAppMode = mode;
-      currentIndex = 0;
-      userAnswers = {};
-      wrongQuestionIds = [];
+function prevQ() {
+  if (currentIndex > 0) {
+    currentIndex--;
+    renderQuestion();
+  }
+}
 
-      const modeBadge = document.getElementById('currentModeBadge');
-      const headerTitle = document.getElementById('headerMainTitle');
-
-      if (mode === 'review') {
-        modeBadge.textContent = '📖 复习背题板块';
-        modeBadge.className = 'font-bold text-[11px] px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700';
-        headerTitle.textContent = '罗氏 · 背题复习';
-      } else {
-        modeBadge.textContent = '✍️ 测验实战板块';
-        modeBadge.className = 'font-bold text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800';
-        headerTitle.textContent = '罗氏 · 在线测评';
-      }
-
-      showView(document.getElementById('viewQuiz'));
-      document.getElementById('quizProgressBar').classList.remove('hidden');
-      renderSingleQuestion();
+// 结算成绩单
+function renderQuizResult() {
+  const bank = getCurrentBank();
+  let correctCount = 0;
+  bank.forEach((q, idx) => {
+    if (userAnswers[idx] && userAnswers[idx].toUpperCase() === q.answer.toUpperCase()) {
+      correctCount++;
     }
-
-    function resetCurrentMode() {
-      currentIndex = 0;
-      userAnswers = {};
-      wrongQuestionIds = [];
-      renderSingleQuestion();
-    }
-
-    function showView(target) {
-      ['viewHome', 'viewQuiz', 'viewResult'].forEach(id => {
-        document.getElementById(id).classList.add('hidden');
-      });
-      target.classList.remove('hidden');
-      target.classList.remove('page-slide-enter');
-      void target.offsetWidth;
-      target.classList.add('page-slide-enter');
-    }
-
-    function renderSingleQuestion() {
-      const q = questionBank[currentIndex];
-      const total = questionBank.length;
-
-      const progressPercent = ((currentIndex + 1) / total) * 100;
-      document.getElementById('progressFill').style.width = `${progressPercent}%`;
-      document.getElementById('questionStepText').textContent = `第 ${currentIndex + 1} / ${total} 题`;
-      document.getElementById('cardNavNumber').textContent = `${currentIndex + 1}/${total}`;
-
-      const typeBadge = document.getElementById('questionTypeBadge');
-      if (q.type === 'multiple') {
-        typeBadge.textContent = '多选题';
-        typeBadge.className = 'bg-purple-100 text-purple-700 font-bold text-[11px] px-2.5 py-0.5 rounded-full';
-      } else if (q.type === 'judge') {
-        typeBadge.textContent = '判断题';
-        typeBadge.className = 'bg-amber-100 text-amber-700 font-bold text-[11px] px-2.5 py-0.5 rounded-full';
-      } else {
-        typeBadge.textContent = '单选题';
-        typeBadge.className = 'bg-blue-100 text-blue-700 font-bold text-[11px] px-2.5 py-0.5 rounded-full';
-      }
-
-      document.getElementById('questionTitle').textContent = q.question;
-
-      if (currentAppMode === 'review') {
-        // =============== 板块一：复习背题模式（单题单页，直接高亮正解与解析） ===============
-        renderReviewMode(q, total);
-      } else {
-        // =============== 板块二：测验考核模式（自主作答，提交后显答案） ===============
-        renderQuizMode(q, total);
-      }
-    }
-
-    // 复习背题模式渲染逻辑
-    function renderReviewMode(q, total) {
-      document.getElementById('submitAnswerBtn').classList.add('hidden');
-      document.getElementById('nextQuestionBtn').classList.add('hidden');
-      document.getElementById('prevQuestionBtn').classList.add('hidden');
-      
-      const reviewBar = document.getElementById('reviewNavBar');
-      reviewBar.classList.remove('hidden');
-
-      document.getElementById('reviewPrevBtn').disabled = (currentIndex === 0);
-      document.getElementById('reviewPrevBtn').classList.toggle('opacity-40', currentIndex === 0);
-      document.getElementById('reviewNextBtnText').textContent = (currentIndex === total - 1) ? '已背诵至最后一题' : '下一题';
-
-      const statusBadge = document.getElementById('instantStatusBadge');
-      statusBadge.classList.remove('hidden');
-      statusBadge.textContent = '标准考点';
-      statusBadge.className = 'text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800';
-
-      const stdAns = String(q.answer).trim().toUpperCase();
-      const container = document.getElementById('optionsContainer');
-      container.innerHTML = '';
-
-      q.options.forEach(opt => {
-        const isStandard = stdAns.includes(opt.key);
-        const card = document.createElement('div');
-
-        if (isStandard) {
-          card.className = "w-full text-left p-3.5 rounded-2xl border-2 border-emerald-500 bg-emerald-50/90 text-emerald-950 font-semibold shadow-sm flex items-center justify-between text-xs md:text-sm";
-          card.innerHTML = `
-            <div class="flex items-center space-x-3 pr-2">
-              <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 bg-emerald-600 text-white">${opt.key}</span>
-              <span class="leading-snug">${opt.text}</span>
-            </div>
-            <div class="shrink-0 text-emerald-600 font-bold text-xs flex items-center space-x-1">
-              <span>正确项</span>
-              <i class="fa-solid fa-circle-check text-base"></i>
-            </div>
-          `;
-        } else {
-          card.className = "w-full text-left p-3.5 rounded-2xl border border-slate-200 bg-white text-slate-600 opacity-70 flex items-center justify-between text-xs md:text-sm";
-          card.innerHTML = `
-            <div class="flex items-center space-x-3 pr-2">
-              <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 bg-slate-100 text-slate-500">${opt.key}</span>
-              <span class="leading-snug">${opt.text}</span>
-            </div>
-            <div></div>
-          `;
-        }
-        container.appendChild(card);
-      });
-
-      // 直接展开正确答案和考点解析
-      document.getElementById('correctAnswerKey').textContent = stdAns;
-      document.getElementById('analysisContent').textContent = q.analysis || '罗氏官方权威深度考点解析。';
-      document.getElementById('instantAnalysisBox').classList.remove('hidden');
-    }
-
-    // 测验实战模式渲染逻辑
-    function renderQuizMode(q, total) {
-      document.getElementById('reviewNavBar').classList.add('hidden');
-      document.getElementById('prevQuestionBtn').classList.remove('hidden');
-      document.getElementById('prevQuestionBtn').classList.toggle('invisible', currentIndex === 0);
-      document.getElementById('nextBtnText').textContent = (currentIndex === total - 1) ? '完成测评查看最终成绩' : '进入下一题';
-
-      const existingAnswer = userAnswers[q.id];
-      if (existingAnswer && existingAnswer.submitted) {
-        isSubmittedCurrent = true;
-        renderSubmittedState(q, existingAnswer.value);
-      } else {
-        isSubmittedCurrent = false;
-        document.getElementById('instantStatusBadge').classList.add('hidden');
-        document.getElementById('instantAnalysisBox').classList.add('hidden');
-        document.getElementById('submitAnswerBtn').classList.remove('hidden');
-        document.getElementById('nextQuestionBtn').classList.add('hidden');
-
-        renderActiveOptions(q, existingAnswer ? existingAnswer.value : null);
-      }
-    }
-
-    function renderActiveOptions(q, currentVal) {
-      const container = document.getElementById('optionsContainer');
-      container.innerHTML = '';
-      const selected = currentVal || (q.type === 'multiple' ? [] : '');
-
-      q.options.forEach(opt => {
-        const isSelected = q.type === 'multiple' ? selected.includes(opt.key) : selected === opt.key;
-        const optBtn = document.createElement('button');
-        optBtn.className = `w-full text-left p-3.5 rounded-2xl border transition-all flex items-center justify-between text-xs md:text-sm font-medium ${
-          isSelected ? 'bg-blue-50 border-blue-600 text-blue-900 shadow-sm' : 'bg-white border-slate-200/90 text-slate-700 hover:border-slate-300'
-        }`;
-        optBtn.dataset.key = opt.key;
-        optBtn.innerHTML = `
-          <div class="flex items-center space-x-3 pr-2">
-            <span class="opt-key-badge w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${
-              isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'
-            }">${opt.key}</span>
-            <span class="opt-text leading-snug">${opt.text}</span>
-          </div>
-          <div class="opt-icon-status shrink-0 text-base">
-            ${isSelected ? '<i class="fa-solid fa-circle-check text-blue-600"></i>' : '<i class="fa-regular fa-circle text-slate-300"></i>'}
-          </div>
-        `;
-        optBtn.addEventListener('click', () => handleOptionClick(opt.key));
-        container.appendChild(optBtn);
-      });
-    }
-
-    function handleOptionClick(key) {
-      if (currentAppMode === 'review' || isSubmittedCurrent) return;
-      const q = questionBank[currentIndex];
-      let currentVal = userAnswers[q.id] ? userAnswers[q.id].value : (q.type === 'multiple' ? [] : '');
-
-      if (q.type === 'multiple') {
-        let arr = Array.isArray(currentVal) ? [...currentVal] : [];
-        if (arr.includes(key)) {
-          arr = arr.filter(k => k !== key);
-        } else {
-          arr.push(key);
-          arr.sort();
-        }
-        userAnswers[q.id] = { value: arr, submitted: false };
-      } else {
-        userAnswers[q.id] = { value: key, submitted: false };
-      }
-      refreshOptionStyles();
-    }
-
-    function refreshOptionStyles() {
-      const q = questionBank[currentIndex];
-      const entry = userAnswers[q.id];
-      const selected = entry ? entry.value : (q.type === 'multiple' ? [] : '');
-
-      Array.from(document.getElementById('optionsContainer').children).forEach(btn => {
-        const k = btn.dataset.key;
-        const isSelected = q.type === 'multiple' ? selected.includes(k) : selected === k;
-        const keyBadge = btn.querySelector('.opt-key-badge');
-        const iconContainer = btn.querySelector('.opt-icon-status');
-
-        if (isSelected) {
-          btn.className = "w-full text-left p-3.5 rounded-2xl border transition-all flex items-center justify-between text-xs md:text-sm font-medium bg-blue-50 border-blue-600 text-blue-900 shadow-sm";
-          keyBadge.className = "opt-key-badge w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors bg-blue-600 text-white";
-          iconContainer.innerHTML = '<i class="fa-solid fa-circle-check text-blue-600"></i>';
-        } else {
-          btn.className = "w-full text-left p-3.5 rounded-2xl border transition-all flex items-center justify-between text-xs md:text-sm font-medium bg-white border-slate-200/90 text-slate-700 hover:border-slate-300";
-          keyBadge.className = "opt-key-badge w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors bg-slate-100 text-slate-600";
-          iconContainer.innerHTML = '<i class="fa-regular fa-circle text-slate-300"></i>';
-        }
-      });
-    }
-
-    function submitCurrentAnswer() {
-      const q = questionBank[currentIndex];
-      const entry = userAnswers[q.id];
-
-      if (!entry || !entry.value || (Array.isArray(entry.value) && entry.value.length === 0)) {
-        showToast('请先选择答案再点击提交');
-        const c = document.getElementById('optionsContainer');
-        c.classList.add('shake-anim');
-        setTimeout(() => c.classList.remove('shake-anim'), 350);
-        return;
-      }
-
-      userAnswers[q.id].submitted = true;
-      isSubmittedCurrent = true;
-      renderSubmittedState(q, entry.value);
-    }
-
-    function renderSubmittedState(q, rawUserVal) {
-      const stdAns = String(q.answer).trim().toUpperCase();
-      const userAnsStr = Array.isArray(rawUserVal) ? rawUserVal.join('') : String(rawUserVal).trim().toUpperCase();
-      const isCorrect = (userAnsStr === stdAns);
-
-      const statusBadge = document.getElementById('instantStatusBadge');
-      statusBadge.classList.remove('hidden');
-      if (isCorrect) {
-        statusBadge.textContent = '回答正确';
-        statusBadge.className = 'text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800';
-      } else {
-        statusBadge.textContent = '回答错误';
-        statusBadge.className = 'text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800';
-        if (!wrongQuestionIds.includes(q.id)) wrongQuestionIds.push(q.id);
-      }
-
-      const container = document.getElementById('optionsContainer');
-      container.innerHTML = '';
-      q.options.forEach(opt => {
-        const isStandard = stdAns.includes(opt.key);
-        const isUserPick = userAnsStr.includes(opt.key);
-
-        const btn = document.createElement('div');
-        let cardClass = "";
-        let badgeClass = "";
-        let iconHtml = "";
-
-        if (isStandard) {
-          cardClass = "bg-emerald-50 border-2 border-emerald-500 text-emerald-950 font-semibold shadow-sm";
-          badgeClass = "bg-emerald-600 text-white";
-          iconHtml = '<i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i>';
-        } else if (isUserPick && !isStandard) {
-          cardClass = "bg-rose-50 border-2 border-rose-400 text-rose-950 font-semibold";
-          badgeClass = "bg-rose-500 text-white";
-          iconHtml = '<i class="fa-solid fa-circle-xmark text-rose-500 text-lg"></i>';
-        } else {
-          cardClass = "opacity-50 bg-slate-50 border border-slate-200 text-slate-400";
-          badgeClass = "bg-slate-200 text-slate-500";
-          iconHtml = '';
-        }
-
-        btn.className = `w-full text-left p-3.5 rounded-2xl transition-all flex items-center justify-between text-xs md:text-sm ${cardClass}`;
-        btn.innerHTML = `
-          <div class="flex items-center space-x-3 pr-2">
-            <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${badgeClass}">${opt.key}</span>
-            <span class="leading-snug">${opt.text}</span>
-          </div>
-          <div class="shrink-0">${iconHtml}</div>
-        `;
-        container.appendChild(btn);
-      });
-
-      document.getElementById('correctAnswerKey').textContent = stdAns;
-      document.getElementById('analysisContent').textContent = q.analysis || '暂无深度解析。';
-      document.getElementById('instantAnalysisBox').classList.remove('hidden');
-
-      document.getElementById('submitAnswerBtn').classList.add('hidden');
-      const nextBtn = document.getElementById('nextQuestionBtn');
-      nextBtn.classList.remove('hidden');
-      nextBtn.classList.add('flex');
-    }
-
-    function gotoNextQuestion() {
-      if (currentIndex < questionBank.length - 1) {
-        currentIndex++;
-        renderSingleQuestion();
-      } else {
-        if (currentAppMode === 'review') {
-          showToast('您已浏览完全部题目！');
-        } else {
-          renderResultView();
-        }
-      }
-    }
-
-    function gotoPrevQuestion() {
-      if (currentIndex > 0) {
-        currentIndex--;
-        renderSingleQuestion();
-      }
-    }
-
-    function openSheetModal() {
-      const container = document.getElementById('modalDotsContainer');
-      container.innerHTML = '';
-      questionBank.forEach((q, idx) => {
-        let colorClass = "bg-slate-100 text-slate-700 hover:bg-slate-200";
-
-        if (currentAppMode === 'review') {
-          colorClass = "bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100";
-        } else {
-          const item = userAnswers[q.id];
-          if (item && item.submitted) {
-            const stdAns = String(q.answer).trim().toUpperCase();
-            const userStr = Array.isArray(item.value) ? item.value.join('') : String(item.value).trim().toUpperCase();
-            colorClass = (userStr === stdAns) 
-              ? "bg-emerald-100 text-emerald-800 font-bold border border-emerald-300"
-              : "bg-rose-100 text-rose-800 font-bold border border-rose-300";
-          } else if (item && item.value && (!Array.isArray(item.value) || item.value.length > 0)) {
-            colorClass = "bg-blue-100 text-blue-800 border border-blue-300";
-          }
-        }
-
-        const dot = document.createElement('button');
-        dot.className = `h-9 rounded-xl flex items-center justify-center text-xs transition active:scale-95 ${colorClass} ${
-          idx === currentIndex ? 'ring-2 ring-blue-600 ring-offset-1 font-black' : ''
-        }`;
-        dot.textContent = `${idx + 1}`;
-        dot.addEventListener('click', () => {
-          currentIndex = idx;
-          closeSheetModal();
-          renderSingleQuestion();
-        });
-        container.appendChild(dot);
-      });
-
-      document.getElementById('sheetModal').classList.remove('hidden');
-    }
-
-    function closeSheetModal() {
-      document.getElementById('sheetModal').classList.add('hidden');
-    }
-
-    function renderResultView() {
-      document.getElementById('quizProgressBar').classList.add('hidden');
-      showView(document.getElementById('viewResult'));
-
-      const total = questionBank.length;
-      let correctCount = 0;
-
-      questionBank.forEach(q => {
-        const item = userAnswers[q.id];
-        if (item && item.submitted) {
-          const stdAns = String(q.answer).trim().toUpperCase();
-          const userStr = Array.isArray(item.value) ? item.value.join('') : String(item.value).trim().toUpperCase();
-          if (userStr === stdAns) correctCount++;
-        }
-      });
-
-      const wrongCount = total - correctCount;
-      const score = Math.round((correctCount / total) * 100);
-
-      document.getElementById('finalScoreText').textContent = score;
-      document.getElementById('statTotalCount').textContent = total;
-      document.getElementById('statCorrectCount').textContent = correctCount;
-      document.getElementById('statWrongCount').textContent = wrongCount;
-
-      const dotsBox = document.getElementById('answerSheetDots');
-      dotsBox.innerHTML = '';
-      questionBank.forEach((q, idx) => {
-        const item = userAnswers[q.id];
-        let isRight = false;
-        if (item && item.submitted) {
-          const stdAns = String(q.answer).trim().toUpperCase();
-          const userStr = Array.isArray(item.value) ? item.value.join('') : String(item.value).trim().toUpperCase();
-          isRight = (userStr === stdAns);
-        }
-
-        const dot = document.createElement('button');
-        dot.className = `h-8 rounded-lg flex items-center justify-center text-[11px] font-bold transition active:scale-95 ${
-          isRight ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-rose-100 text-rose-800 border border-rose-300'
-        }`;
-        dot.textContent = `${idx + 1}`;
-        dot.addEventListener('click', () => {
-          currentIndex = idx;
-          showView(document.getElementById('viewQuiz'));
-          document.getElementById('quizProgressBar').classList.remove('hidden');
-          renderSingleQuestion();
-        });
-        dotsBox.appendChild(dot);
-      });
-
-      const retryBtn = document.getElementById('retryWrongOnlyBtn');
-      if (wrongCount > 0) {
-        retryBtn.classList.remove('hidden');
-        document.getElementById('wrongCountLabel').textContent = wrongCount;
-      } else {
-        retryBtn.classList.add('hidden');
-      }
-    }
-
-    function startWrongPractice() {
-      if (wrongQuestionIds.length === 0) return;
-      questionBank = questionBank.filter(q => wrongQuestionIds.includes(q.id));
-      currentIndex = 0;
-      userAnswers = {};
-      wrongQuestionIds = [];
-      updateAllCounters();
-      startMode('quiz');
-      showToast(`已开启错题专练，共 ${questionBank.length} 题！`);
-    }
-
-    function showToast(msg) {
-      const toast = document.getElementById('toast');
-      document.getElementById('toastMsg').textContent = msg;
-      toast.classList.remove('opacity-0', 'pointer-events-none');
-      setTimeout(() => toast.classList.add('opacity-0', 'pointer-events-none'), 2500);
-    }
-
-    /**
-     * ============================================================
-     * 高精度 Excel 解析与一键源码刻录导出
-     * ============================================================
-     */
-    function handleExcelUpload(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        try {
-          const data = new Uint8Array(evt.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const firstSheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[firstSheetName];
-          const rawRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
-
-          if (!rawRows || rawRows.length < 2) {
-            showToast('未在 Excel 中识别到试题内容');
-            return;
-          }
-
-          let headerRowIdx = 0;
-          let colIdxQuestion = -1, colIdxA = -1, colIdxB = -1, colIdxC = -1, colIdxD = -1, colIdxAns = -1, colIdxAna = -1;
-
-          for (let r = 0; r < Math.min(5, rawRows.length); r++) {
-            const row = rawRows[r].map(c => String(c).trim());
-            row.forEach((cell, idx) => {
-              if (/题干|题目|试题|内容|Question/i.test(cell) && colIdxQuestion === -1) colIdxQuestion = idx;
-              if (/^(选项\s*A|A$|A选项)/i.test(cell) && colIdxA === -1) colIdxA = idx;
-              if (/^(选项\s*B|B$|B选项)/i.test(cell) && colIdxB === -1) colIdxB = idx;
-              if (/^(选项\s*C|C$|C选项)/i.test(cell) && colIdxC === -1) colIdxC = idx;
-              if (/^(选项\s*D|D$|D选项)/i.test(cell) && colIdxD === -1) colIdxD = idx;
-              if (/答案|正确答案|标准答案|Key/i.test(cell) && colIdxAns === -1) colIdxAns = idx;
-              if (/解析|考点|解释|说明|Analysis/i.test(cell) && colIdxAna === -1) colIdxAna = idx;
-            });
-
-            if (colIdxQuestion !== -1 && (colIdxA !== -1 || colIdxAns !== -1)) {
-              headerRowIdx = r;
-              break;
-            }
-          }
-
-          if (colIdxQuestion === -1) {
-            colIdxQuestion = 0; colIdxA = 1; colIdxB = 2; colIdxC = 3; colIdxD = 4; colIdxAns = 5; colIdxAna = 6;
-            headerRowIdx = 0;
-          }
-
-          const parsedList = [];
-          for (let r = headerRowIdx + 1; r < rawRows.length; r++) {
-            const row = rawRows[r];
-            if (!row) continue;
-
-            const qText = String(row[colIdxQuestion] || '').trim();
-            if (!qText) continue;
-
-            const optA = String(row[colIdxA] || '').trim();
-            const optB = String(row[colIdxB] || '').trim();
-            const optC = String(row[colIdxC] || '').trim();
-            const optD = String(row[colIdxD] || '').trim();
-            let ans = String(row[colIdxAns] || 'A').trim().toUpperCase().replace(/[^A-Z]/g, '');
-            const ana = String(row[colIdxAna] || '罗氏官方权威深度考点解析').trim();
-
-            const options = [];
-            if (optA) options.push({ key: 'A', text: optA });
-            if (optB) options.push({ key: 'B', text: optB });
-            if (optC) options.push({ key: 'C', text: optC });
-            if (optD) options.push({ key: 'D', text: optD });
-
-            let qType = 'single';
-            if (ans.length > 1) {
-              qType = 'multiple';
-            } else if (options.length === 2 && (optA.includes('正确') || optA.includes('对') || optA.toLowerCase() === 'true')) {
-              qType = 'judge';
-            }
-
-            parsedList.push({
-              id: parsedList.length + 1,
-              type: qType,
-              question: qText,
-              options: options,
-              answer: ans || 'A',
-              analysis: ana || '暂无深度解析'
-            });
-          }
-
-          if (parsedList.length === 0) {
-            showToast('未能提取有效题目，请确认 Excel 包含题干和选项');
-            return;
-          }
-
-          questionBank = parsedList;
-          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(parsedList));
-          
-          setBankSourceUI(`已载入外部题库(${parsedList.length}题)`, 'bg-emerald-100 text-emerald-800');
-
-          updateAllCounters();
-          showView(document.getElementById('viewHome'));
-          showToast(`成功识别 ${parsedList.length} 题！可选择背题或测验`);
-        } catch (err) {
-          console.error(err);
-          showToast('Excel 文件解析失败，请检查文件格式');
-        }
-      };
-      reader.readAsArrayBuffer(file);
-      e.target.value = '';
-    }
-
-    function exportEmbeddedHtml() {
-      if (!questionBank || questionBank.length === 0) {
-        showToast('当前没有可导出的试题数据');
-        return;
-      }
-
-      let fullHtml = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-      const bankJsonString = JSON.stringify(questionBank, null, 2);
-
-      fullHtml = fullHtml.replace(
-        /let\s+HARDCODED_BANK\s*=\s*(null|\[[\s\S]*?\]);/,
-        `let HARDCODED_BANK = ${bankJsonString};`
-      );
-
-      const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
-      const downloadLink = document.createElement('a');
-      downloadLink.href = URL.createObjectURL(blob);
-      downloadLink.download = 'index.html';
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
-
-      showToast(`已成功导出内置 ${questionBank.length} 题（双板块）的 index.html！`);
-    }
-  </script>
+  });
+  const score = Math.round((correctCount / bank.length) * 100);
+
+  const resultHtml = `
+    <div style="background:#fff; border-radius:var(--radius-md); padding:24px; text-align:center; box-shadow:var(--shadow-sm);">
+      <h3 style="font-size:20px; color:var(--text-main); margin-bottom:8px;">测验完成</h3>
+      <div style="font-size:42px; font-weight:800; color:var(--primary); margin:12px 0;">${score}<span style="font-size:16px;">分</span></div>
+      <p style="color:#64748b; font-size:14px; margin-bottom:20px;">答对 ${correctCount} 题 / 共 ${bank.length} 题</p>
+      <div style="display:flex; gap:10px;">
+        <button class="btn-main" onclick="startQuiz()">重新测试</button>
+        <button class="btn-secondary" onclick="startStudy()">错题背诵</button>
+      </div>
+    </div>
+  `;
+  document.getElementById("screen-body").innerHTML = resultHtml;
+  document.getElementById("bottom-bar").innerHTML = `<button class="btn-main" onclick="goHome()">返回岗位首页</button>`;
+}
+
+// 初始化二维码
+function initQRCode() {
+  const targetUrl = "https://stefanie2027.github.io/rochetest-revise/";
+  document.getElementById("qrcode").innerHTML = "";
+  new QRCode(document.getElementById("qrcode"), {
+    text: targetUrl,
+    width: 150,
+    height: 150,
+    colorDark: "#000000",
+    colorLight: "#ffffff"
+  });
+}
+
+function copyShareUrl() {
+  navigator.clipboard.writeText("https://stefanie2027.github.io/rochetest-revise/").then(() => {
+    alert("答题链接已复制！");
+  });
+}
+
+function downloadQRCode() {
+  const img = document.querySelector("#qrcode img");
+  if (img) {
+    const a = document.createElement("a");
+    a.href = img.src;
+    a.download = "罗氏测评二维码.png";
+    a.click();
+  }
+}
+
+window.onload = function() {
+  initQRCode();
+  renderHome();
+};
+</script>
 </body>
 </html>
